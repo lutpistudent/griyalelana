@@ -23,7 +23,10 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        if ($this->app->isProduction()) {
+        $isVercel = (bool) ($_ENV['VERCEL'] ?? $_SERVER['VERCEL'] ?? getenv('VERCEL'))
+            || str_starts_with(base_path(), '/var/task');
+
+        if ($this->app->isProduction() || $isVercel) {
             URL::forceScheme('https');
         }
 
