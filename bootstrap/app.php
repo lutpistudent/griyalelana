@@ -5,7 +5,9 @@ use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
 
-$isVercel = (bool) ($_ENV['VERCEL'] ?? $_SERVER['VERCEL'] ?? getenv('VERCEL'));
+$basePath = dirname(__DIR__);
+$isVercel = (bool) ($_ENV['VERCEL'] ?? $_SERVER['VERCEL'] ?? getenv('VERCEL'))
+    || str_starts_with($basePath, '/var/task');
 $configuredStoragePath = $_ENV['LARAVEL_STORAGE_PATH']
     ?? $_SERVER['LARAVEL_STORAGE_PATH']
     ?? getenv('LARAVEL_STORAGE_PATH')
@@ -30,13 +32,9 @@ if ($storagePath) {
             'LOG_CHANNEL' => 'stderr',
             'LOG_STACK' => 'stderr',
         ] as $key => $value) {
-            $configuredValue = $_ENV[$key] ?? $_SERVER[$key] ?? getenv($key) ?: null;
-
-            if ($configuredValue === null || in_array($configuredValue, ['database', 'file', 'single', 'daily'], true)) {
-                $_ENV[$key] = $value;
-                $_SERVER[$key] = $value;
-                putenv("{$key}={$value}");
-            }
+            $_ENV[$key] = $value;
+            $_SERVER[$key] = $value;
+            putenv("{$key}={$value}");
         }
     }
 
@@ -70,7 +68,7 @@ if ($storagePath) {
     }
 }
 
-return Application::configure(basePath: dirname(__DIR__))
+return Application::configure(basePath: $basePath)
     ->withRouting(
         web: __DIR__.'/../routes/web.php',
         api: __DIR__.'/../routes/api.php',
