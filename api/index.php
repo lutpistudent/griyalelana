@@ -5,6 +5,7 @@ use Illuminate\Http\Request;
 define('LARAVEL_START', microtime(true));
 
 $basePath = dirname(__DIR__);
+$isVercel = (bool) ($_ENV['VERCEL'] ?? $_SERVER['VERCEL'] ?? getenv('VERCEL'));
 $storagePath = $_ENV['LARAVEL_STORAGE_PATH']
     ?? $_SERVER['LARAVEL_STORAGE_PATH']
     ?? getenv('LARAVEL_STORAGE_PATH')
@@ -13,6 +14,24 @@ $storagePath = $_ENV['LARAVEL_STORAGE_PATH']
 $_ENV['LARAVEL_STORAGE_PATH'] = $storagePath;
 $_SERVER['LARAVEL_STORAGE_PATH'] = $storagePath;
 putenv("LARAVEL_STORAGE_PATH={$storagePath}");
+
+if ($isVercel) {
+    foreach ([
+        'SESSION_DRIVER' => 'cookie',
+        'CACHE_STORE' => 'array',
+        'QUEUE_CONNECTION' => 'sync',
+        'LOG_CHANNEL' => 'stderr',
+        'LOG_STACK' => 'stderr',
+    ] as $key => $value) {
+        $configuredValue = $_ENV[$key] ?? $_SERVER[$key] ?? getenv($key) ?: null;
+
+        if ($configuredValue === null || in_array($configuredValue, ['database', 'file', 'single', 'daily'], true)) {
+            $_ENV[$key] = $value;
+            $_SERVER[$key] = $value;
+            putenv("{$key}={$value}");
+        }
+    }
+}
 
 foreach ([
     $storagePath.'/app/public',
