@@ -5,6 +5,7 @@ use App\Http\Controllers\ComplaintController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\PageController;
+use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\ProfileController;
 use Illuminate\Support\Facades\Route;
 
@@ -26,6 +27,12 @@ Route::middleware(['auth'])->group(function () {
     // Contract
     Route::get('/dashboard/kontrak', [DashboardController::class, 'contractDetail'])->name('dashboard.contract');
     Route::get('/dashboard/kontrak/download', [DashboardController::class, 'downloadContract'])->name('dashboard.contract.download');
+
+    // Payments
+    Route::post('/payments/booking/{booking}/dp', [PaymentController::class, 'payBookingDp'])
+        ->name('payments.booking-dp');
+    Route::post('/payments/schedules/{schedule}', [PaymentController::class, 'paySchedule'])
+        ->name('payments.schedule');
 
     // Complaints
     Route::get('/keluhan', [ComplaintController::class, 'index'])->name('complaints.index');

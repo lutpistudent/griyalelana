@@ -14,6 +14,12 @@ class Payment extends Model
         'payment_method',
         'midtrans_order_id',
         'midtrans_transaction_id',
+        'xendit_external_id',
+        'xendit_invoice_id',
+        'xendit_invoice_url',
+        'xendit_payment_id',
+        'xendit_status',
+        'xendit_payload',
         'status',
         'paid_at',
         'receipt_url',
@@ -24,6 +30,7 @@ class Payment extends Model
         return [
             'amount' => 'decimal:2',
             'paid_at' => 'datetime',
+            'xendit_payload' => 'array',
         ];
     }
 
@@ -47,5 +54,10 @@ class Payment extends Model
     public function scopeSuccessful($query)
     {
         return $query->where('status', 'success');
+    }
+
+    public function scopePending($query)
+    {
+        return $query->where('status', 'pending');
     }
 }

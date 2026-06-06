@@ -72,7 +72,7 @@ class Contract extends Model
     public function nextPaymentDue()
     {
         return $this->paymentSchedules()
-            ->where('status', 'pending')
+            ->whereIn('status', ['pending', 'overdue'])
             ->orderBy('due_date')
             ->first();
     }

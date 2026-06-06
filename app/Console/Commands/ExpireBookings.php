@@ -15,12 +15,31 @@ class ExpireBookings extends Command
         $expiredBookings = Booking::where('status', 'approved')
             ->whereNotNull('dp_expires_at')
             ->where('dp_expires_at', '<', now())
+            ->with('contract.paymentSchedules', 'room')
             ->get();
 
         $count = 0;
 
         foreach ($expiredBookings as $booking) {
+            $contract = $booking->contract;
+            $dpPaid = $contract?->paymentSchedules
+                ->where('installment_type', 'dp')
+                ->where('status', 'paid')
+                ->isNotEmpty();
+
+            if ($dpPaid) {
+                continue;
+            }
+
             $booking->update(['status' => 'expired']);
+
+            if ($contract) {
+                $contract->paymentSchedules()
+                    ->whereIn('status', ['pending', 'overdue'])
+                    ->update(['status' => 'waived']);
+
+                $contract->update(['status' => 'terminated']);
+            }
 
             // Make the room available again
             if ($booking->room) {

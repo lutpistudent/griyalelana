@@ -39,7 +39,8 @@ class PaymentSchedule extends Model
     // === Helper Methods ===
     public function isOverdue(): bool
     {
-        return $this->status === 'pending' && $this->due_date->isPast();
+        return $this->status === 'overdue'
+            || ($this->status === 'pending' && $this->due_date->isPast());
     }
 
     // === Scopes ===

@@ -198,10 +198,19 @@
                     </script>
                 @endif
 
-                <button disabled class="btn-primary opacity-50 cursor-not-allowed w-full sm:w-auto">
-                    💳 Bayar DP — Segera Hadir (Midtrans)
-                </button>
-                <p class="text-xs text-theme-muted mt-2">Integrasi payment gateway akan segera tersedia.</p>
+                @if($approvedBooking->payment_option === 'with_dp' && ! $approvedBooking->isExpired())
+                    <form method="POST" action="{{ route('payments.booking-dp', $approvedBooking) }}">
+                        @csrf
+                        <button type="submit" class="btn-primary w-full sm:w-auto">
+                            Bayar DP Sekarang
+                        </button>
+                    </form>
+                    <p class="text-xs text-theme-muted mt-2">Anda akan diarahkan ke halaman pembayaran Xendit.</p>
+                @else
+                    <a href="{{ route('landing') }}#kontak" class="btn-primary inline-flex w-full sm:w-auto justify-center">
+                        Hubungi Owner
+                    </a>
+                @endif
             </div>
         </div>
 
@@ -245,9 +254,12 @@
                         <p class="text-sm text-theme-secondary">{{ ucwords(str_replace('_', ' ', $nextPayment->installment_type)) }}</p>
                         <p class="text-2xl font-extrabold text-accent">Rp {{ number_format($nextPayment->amount, 0, ',', '.') }}</p>
                     </div>
-                    <button disabled class="btn-primary opacity-50 cursor-not-allowed text-sm">
-                        💳 Bayar — Segera Hadir
-                    </button>
+                    <form method="POST" action="{{ route('payments.schedule', $nextPayment) }}">
+                        @csrf
+                        <button type="submit" class="btn-primary text-sm">
+                            Bayar Sekarang
+                        </button>
+                    </form>
                 </div>
             </div>
             @endif

@@ -101,14 +101,14 @@ class BookingService
                     'installment_number' => $installment++,
                     'installment_type' => 'dp',
                     'amount' => $dpAmount,
-                    'due_date' => now()->addHours(12), // Same as dp_expires_at
+                    'due_date' => $booking->dp_expires_at ?? now()->addHours(12),
                     'status' => 'pending',
                 ]);
 
                 PaymentSchedule::create([
                     'contract_id' => $contract->id,
                     'installment_number' => $installment++,
-                    'installment_type' => 'pelunasan_checkin',
+                    'installment_type' => 'checkin_payment',
                     'amount' => $checkInAmount,
                     'due_date' => $startDate,
                     'status' => 'pending',
@@ -121,7 +121,7 @@ class BookingService
                 PaymentSchedule::create([
                     'contract_id' => $contract->id,
                     'installment_number' => $installment++,
-                    'installment_type' => 'checkin_50',
+                    'installment_type' => 'checkin_payment',
                     'amount' => $firstPayment,
                     'due_date' => $startDate,
                     'status' => 'pending',
@@ -130,7 +130,7 @@ class BookingService
                 PaymentSchedule::create([
                     'contract_id' => $contract->id,
                     'installment_number' => $installment++,
-                    'installment_type' => 'pelunasan_bulan2',
+                    'installment_type' => 'final_payment',
                     'amount' => $secondPayment,
                     'due_date' => $startDate->copy()->addDays(30),
                     'status' => 'pending',
@@ -147,7 +147,7 @@ class BookingService
             PaymentSchedule::create([
                 'contract_id' => $contract->id,
                 'installment_number' => $installment++,
-                'installment_type' => "cicilan_tahun{$year}_1",
+                'installment_type' => 'installment',
                 'amount' => $cicilan,
                 'due_date' => $yearStart,
                 'status' => 'pending',
@@ -156,7 +156,7 @@ class BookingService
             PaymentSchedule::create([
                 'contract_id' => $contract->id,
                 'installment_number' => $installment++,
-                'installment_type' => "cicilan_tahun{$year}_2",
+                'installment_type' => 'installment',
                 'amount' => $cicilan,
                 'due_date' => $yearStart->copy()->addMonths(4),
                 'status' => 'pending',
@@ -165,7 +165,7 @@ class BookingService
             PaymentSchedule::create([
                 'contract_id' => $contract->id,
                 'installment_number' => $installment++,
-                'installment_type' => "cicilan_tahun{$year}_3",
+                'installment_type' => 'installment',
                 'amount' => $lastCicilan,
                 'due_date' => $yearStart->copy()->addMonths(8),
                 'status' => 'pending',
