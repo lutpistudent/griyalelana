@@ -7,6 +7,17 @@
 <a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
 </p>
 
+## Deploy ke Vercel
+
+Project ini sudah disiapkan untuk Vercel lewat `vercel.json` dan entrypoint `api/index.php` memakai community runtime `vercel-php@0.6.2` untuk PHP 8.2.
+
+1. Import repository ke Vercel dan pilih Framework Preset `Other`.
+2. Isi Environment Variables dari `.env.vercel.example` di dashboard Vercel. Jangan upload file `.env`.
+3. Pastikan database production bisa diakses dari Vercel, lalu jalankan migrasi dari lokal atau CI dengan env production.
+4. Set `APP_KEY` dari output `php artisan key:generate --show`.
+
+Vercel hanya menyediakan filesystem writable sementara di `/tmp`, jadi file yang harus permanen perlu disimpan di database atau layanan storage eksternal.
+
 ## About Laravel
 
 Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:

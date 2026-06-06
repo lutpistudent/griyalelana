@@ -2,8 +2,10 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
 use App\Models\Setting;
+use App\Services\ContractPdfService;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 
 class DashboardController extends Controller
 {
@@ -14,8 +16,8 @@ class DashboardController extends Controller
 
         // Eager load both relations in a single pass to avoid multiple queries
         $user->load([
-            'contracts' => fn($q) => $q->where('status', 'active')->with('room.roomType', 'paymentSchedules', 'booking'),
-            'bookings' => fn($q) => $q->whereIn('status', ['pending', 'approved'])->with('room.roomType'),
+            'contracts' => fn ($q) => $q->where('status', 'active')->with('room.roomType', 'paymentSchedules', 'booking'),
+            'bookings' => fn ($q) => $q->whereIn('status', ['pending', 'approved'])->with('room.roomType'),
         ]);
 
         // Determine dashboard state from already-loaded relations
@@ -31,6 +33,7 @@ class DashboardController extends Controller
             $totalPaid = $activeContract->paymentSchedules->where('status', 'paid')->sum('amount');
 
             $state = 'contract';
+
             return view('dashboard.index', compact(
                 'user', 'settings', 'state', 'activeContract',
                 'nextPayment', 'paidSchedules', 'totalSchedules', 'totalPaid'
@@ -40,11 +43,13 @@ class DashboardController extends Controller
         // State 2: Has pending or approved booking
         if ($pendingBooking) {
             $state = 'pending';
+
             return view('dashboard.index', compact('user', 'settings', 'state', 'pendingBooking'));
         }
 
         if ($approvedBooking) {
             $state = 'approved';
+
             return view('dashboard.index', compact('user', 'settings', 'state', 'approvedBooking'));
         }
 
@@ -69,7 +74,7 @@ class DashboardController extends Controller
             ->with('room.roomType', 'paymentSchedules', 'booking', 'user')
             ->first();
 
-        if (!$contract) {
+        if (! $contract) {
             return redirect()->route('dashboard')->with('error', 'Tidak ada kontrak aktif.');
         }
 
@@ -83,20 +88,21 @@ class DashboardController extends Controller
         $user = $request->user();
         $contract = $user->contracts()->where('status', 'active')->first();
 
-        if (!$contract || !$contract->contract_pdf_url) {
+        if (! $contract || ! $contract->contract_pdf_url) {
             return redirect()->route('dashboard')->with('error', 'PDF kontrak belum tersedia.');
         }
 
-        $path = str_replace('/storage/', '', parse_url($contract->contract_pdf_url, PHP_URL_PATH));
-        $fullPath = storage_path('app/public/' . basename($path));
+        $path = ltrim(str_replace('/storage/', '', parse_url($contract->contract_pdf_url, PHP_URL_PATH) ?? ''), '/');
 
-        if (!file_exists($fullPath)) {
-            // Try regenerating
-            $pdfService = new \App\Services\ContractPdfService();
-            $pdfService->generate($contract);
-            $fullPath = storage_path('app/public/contracts/' . $contract->contract_number . '.pdf');
+        if ($path === '') {
+            $path = "contracts/{$contract->contract_number}.pdf";
         }
 
-        return response()->download($fullPath, "Kontrak-{$contract->contract_number}.pdf");
+        if (! Storage::disk('public')->exists($path)) {
+            app(ContractPdfService::class)->generate($contract);
+            $path = "contracts/{$contract->contract_number}.pdf";
+        }
+
+        return Storage::disk('public')->download($path, "Kontrak-{$contract->contract_number}.pdf");
     }
 }
