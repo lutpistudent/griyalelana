@@ -4,6 +4,7 @@ namespace App\Providers;
 
 use App\Database\Connectors\NeonPostgresConnector;
 use App\Models\Setting;
+use Illuminate\Support\Facades\URL;
 use Illuminate\Support\Facades\View;
 use Illuminate\Support\ServiceProvider;
 
@@ -22,6 +23,10 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        if ($this->app->isProduction()) {
+            URL::forceScheme('https');
+        }
+
         // Share settings globally so the footer always has contact info
         // Uses cached settings (1 query + cache) instead of 7 individual queries
         View::composer('layouts.app', function ($view) {
