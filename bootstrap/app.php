@@ -20,9 +20,11 @@ $storagePath = $configuredStoragePath;
 if ($storagePath) {
     $_ENV['LARAVEL_STORAGE_PATH'] = $storagePath;
     $_SERVER['LARAVEL_STORAGE_PATH'] = $storagePath;
+    putenv("LARAVEL_STORAGE_PATH={$storagePath}");
 
     foreach ([
         $storagePath.'/app/public',
+        $storagePath.'/bootstrap/cache',
         $storagePath.'/framework/cache/data',
         $storagePath.'/framework/sessions',
         $storagePath.'/framework/testing',
@@ -31,6 +33,21 @@ if ($storagePath) {
     ] as $directory) {
         if (! is_dir($directory) && ! mkdir($directory, 0755, true) && ! is_dir($directory)) {
             throw new RuntimeException("Directory [{$directory}] could not be created.");
+        }
+    }
+
+    if ($isVercel) {
+        foreach ([
+            'APP_CONFIG_CACHE' => $storagePath.'/bootstrap/cache/config.php',
+            'APP_EVENTS_CACHE' => $storagePath.'/bootstrap/cache/events.php',
+            'APP_PACKAGES_CACHE' => $storagePath.'/bootstrap/cache/packages.php',
+            'APP_ROUTES_CACHE' => $storagePath.'/bootstrap/cache/routes.php',
+            'APP_SERVICES_CACHE' => $storagePath.'/bootstrap/cache/services.php',
+            'VIEW_COMPILED_PATH' => $storagePath.'/framework/views',
+        ] as $key => $path) {
+            $_ENV[$key] = $_ENV[$key] ?? $_SERVER[$key] ?? getenv($key) ?: $path;
+            $_SERVER[$key] = $_ENV[$key];
+            putenv("{$key}={$_ENV[$key]}");
         }
     }
 }
